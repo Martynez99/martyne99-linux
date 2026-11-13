@@ -46,11 +46,11 @@ qemu-test: $(KERNEL)
 		grep -q "MARTYNE LINUX: M1 boot OK" $(BUILD)/qemu-test.log || \
 		(echo "Kernel boot signature missing (QEMU exit $$status)"; exit 1); \
 		grep -q "timer: tick 0x0000000000000001" $(BUILD)/qemu-test.log || \
-		(echo "Timer tick 1 missing (QEMU exit $status)"; exit 1); \
+		(echo "Timer tick 1 missing"; exit 1); \
 		grep -q "timer: tick 0x0000000000000002" $(BUILD)/qemu-test.log || \
-		(echo "Timer tick 2 missing (QEMU exit $status)"; exit 1); \
+		(echo "Timer tick 2 missing"; exit 1); \
 		grep -q "timer: tick 0x0000000000000003" $(BUILD)/qemu-test.log || \
-		(echo "Timer tick 3 missing (QEMU exit $status)"; exit 1); \
+		(echo "Timer tick 3 missing"; exit 1); \
 		echo "QEMU boot and repeated timer IRQ test passed"
 
 clean:
