@@ -32,8 +32,8 @@ void gic_init(void)
 
     GICC_PMR = 0xff;
     __asm__ volatile("dsb sy" ::: "memory");
-    GICC_CTLR = 0x2;
-    GICD_CTLR = 0x2;
+    GICC_CTLR = 0x1;
+    GICD_CTLR = 0x1;
     __asm__ volatile("dsb sy\n\tisb" ::: "memory");
 }
 
