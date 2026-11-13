@@ -32,7 +32,8 @@ void gic_init(void)
 
     GICC_PMR = 0xff;
     __asm__ volatile("dsb sy" ::: "memory");
-    GICC_CTLR = 0x2;
+    /* Secure-view Group 1 acknowledgement requires AckCtl (bit 2). */
+    GICC_CTLR = 0x6;
     GICD_CTLR = 0x2;
     __asm__ volatile("dsb sy\n\tisb" ::: "memory");
 }
