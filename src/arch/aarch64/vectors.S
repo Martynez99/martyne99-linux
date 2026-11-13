@@ -30,15 +30,7 @@ exception_vectors:
     VECTOR sync_exception
     VECTOR sync_exception
 
-sync_exception:
-    mov x0, #0
-    b exception_common
-
-irq_exception:
-    mov x0, #1
-
-exception_common:
-    // 256-byte aligned frame: x0-x30 plus padding.
+.macro SAVE_CONTEXT
     sub sp, sp, #256
     stp x0,  x1,  [sp, #0]
     stp x2,  x3,  [sp, #16]
@@ -56,13 +48,9 @@ exception_common:
     stp x26, x27, [sp, #208]
     stp x28, x29, [sp, #224]
     str x30, [sp, #240]
+.endm
 
-    // C ABI: x0=vector kind, x1=ESR, x2=FAR, x3=ELR.
-    mrs x1, esr_el1
-    mrs x2, far_el1
-    mrs x3, elr_el1
-    bl exception_dispatch
-
+.macro RESTORE_CONTEXT
     ldp x0,  x1,  [sp, #0]
     ldp x2,  x3,  [sp, #16]
     ldp x4,  x5,  [sp, #32]
@@ -80,6 +68,25 @@ exception_common:
     ldp x28, x29, [sp, #224]
     ldr x30, [sp, #240]
     add sp, sp, #256
+.endm
+
+sync_exception:
+    SAVE_CONTEXT
+    mov x0, #0
+    b exception_common
+
+irq_exception:
+    SAVE_CONTEXT
+    mov x0, #1
+
+exception_common:
+    // C ABI: x0=vector kind, x1=ESR, x2=FAR, x3=ELR.
+    mrs x1, esr_el1
+    mrs x2, far_el1
+    mrs x3, elr_el1
+    bl exception_dispatch
+
+    RESTORE_CONTEXT
     eret
 
 .size exception_vectors, . - exception_vectors
