@@ -17,8 +17,7 @@ static unsigned long read_current_el(void)
 
 static void enable_irq(void)
 {
-    __asm__ volatile("msr daifclr, #2
-isb" ::: "memory");
+    __asm__ volatile("msr daifclr, #2\n\tisb" ::: "memory");
 }
 
 void kernel_main(void)
