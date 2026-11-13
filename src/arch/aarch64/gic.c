@@ -8,18 +8,18 @@
 #define GICD_CTLR       (*(volatile uint32_t *)(GICD_BASE + 0x000))
 #define GICD_IGROUPR0   (*(volatile uint32_t *)(GICD_BASE + 0x080))
 #define GICD_ISENABLER0 (*(volatile uint32_t *)(GICD_BASE + 0x100))
-#define GICD_IPRIORITYR (*(volatile uint8_t  *)(GICD_BASE + 0x400 + 27))
+#define GICD_IPRIORITYR (*(volatile uint8_t  *)(GICD_BASE + 0x400 + 30))
 #define GICC_CTLR       (*(volatile uint32_t *)(GICC_BASE + 0x000))
 #define GICC_PMR        (*(volatile uint32_t *)(GICC_BASE + 0x004))
 #define GICC_IAR        (*(volatile uint32_t *)(GICC_BASE + 0x00c))
 #define GICC_EOIR       (*(volatile uint32_t *)(GICC_BASE + 0x010))
 
-#define ARM_GENERIC_TIMER_PPI 27U
+#define ARM_GENERIC_TIMER_PPI 30U
 #define GIC_SPURIOUS_ID        1023U
 
 void gic_init(void)
 {
-    /* QEMU virt: route the EL1 virtual timer PPI to non-secure Group 1. */
+    /* QEMU virt GICv2: route the EL1 non-secure physical timer to Group 1. */
     GICD_CTLR = 0;
     GICC_CTLR = 0;
 
@@ -39,7 +39,7 @@ void gic_handle_irq(void)
     uint32_t iar = GICC_IAR;
     uint32_t id = iar & 0x3ffU;
 
-    if (id == GIC_SPURIOUS_ID)
+    if (id >= 1020U)
         return;
 
     if (id == ARM_GENERIC_TIMER_PPI)
