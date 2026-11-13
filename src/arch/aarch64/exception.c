@@ -1,9 +1,14 @@
 #include "exception.h"
 #include "gic.h"
+#include "scheduler.h"
+#include "timer.h"
 #include "uart.h"
 
-static void exception_panic(unsigned long esr, unsigned long far,
-                            unsigned long elr)
+#define ARM_GENERIC_TIMER_PPI 30U
+
+static __attribute__((noreturn))
+void exception_panic(unsigned long esr, unsigned long far,
+                     unsigned long elr)
 {
     uart_puts("\nFATAL: synchronous exception\nESR: ");
     uart_hex(esr);
@@ -19,15 +24,21 @@ static void exception_panic(unsigned long esr, unsigned long far,
 void exception_vectors_install(void)
 {
     extern char exception_vectors[];
-    __asm__ volatile("msr vbar_el1, %0; isb" :: "r"(exception_vectors) : "memory");
+    __asm__ volatile("msr vbar_el1, %0; isb"
+                     :: "r"(exception_vectors) : "memory");
 }
 
-void exception_dispatch(unsigned long vector, unsigned long esr,
-                        unsigned long far, unsigned long elr)
+exception_frame_t *exception_dispatch(unsigned long vector,
+                                      unsigned long esr,
+                                      unsigned long far,
+                                      unsigned long elr,
+                                      exception_frame_t *frame)
 {
-    if (vector == 1) {
-        gic_handle_irq();
-        return;
+    if (vector == 1UL) {
+        uint32_t interrupt_id = gic_handle_irq();
+        if (interrupt_id == ARM_GENERIC_TIMER_PPI)
+            return scheduler_on_timer(frame);
+        return frame;
     }
 
     exception_panic(esr, far, elr);

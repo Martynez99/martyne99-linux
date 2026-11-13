@@ -15,11 +15,10 @@
 #define GICC_EOIR       (*(volatile uint32_t *)(GICC_BASE + 0x010))
 
 #define ARM_GENERIC_TIMER_PPI 30U
-#define GIC_SPURIOUS_ID        1023U
+#define GIC_SPECIAL_ID_MIN    1020U
 
 void gic_init(void)
 {
-    /* Configure the non-secure physical timer PPI as Group 1. */
     GICD_CTLR = 0;
     GICC_CTLR = 0;
 
@@ -30,26 +29,25 @@ void gic_init(void)
     GICC_PMR = 0xff;
     __asm__ volatile("dsb sy" ::: "memory");
 
-    /*
-     * Enable Group 1 and AckCtl. QEMU virt runs without TrustZone by
-     * default, so secure-view acknowledgement of Group 1 requires AckCtl.
-     */
+    /* Group 1 plus AckCtl for QEMU virt's default non-TrustZone GICv2. */
     GICC_CTLR = 0x6;
     GICD_CTLR = 0x2;
     __asm__ volatile("dsb sy\n\tisb" ::: "memory");
 }
 
-void gic_handle_irq(void)
+uint32_t gic_handle_irq(void)
 {
     uint32_t iar = GICC_IAR;
     uint32_t id = iar & 0x3ffU;
 
-    if (id == GIC_SPURIOUS_ID)
-        return;
+    /* IDs 1020-1023 are special responses and must not be EOI'd. */
+    if (id >= GIC_SPECIAL_ID_MIN)
+        return id;
 
     if (id == ARM_GENERIC_TIMER_PPI)
         timer_irq_handler();
 
     GICC_EOIR = iar;
     __asm__ volatile("dsb sy" ::: "memory");
+    return id;
 }

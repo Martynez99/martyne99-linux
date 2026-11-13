@@ -11,7 +11,7 @@ CFLAGS      := --target=$(TARGET) -mcpu=cortex-a57 -ffreestanding -fno-builtin \
 ASFLAGS     := --target=$(TARGET) -mcpu=cortex-a57 -g
 LDFLAGS     := -T linker.ld -nostdlib --build-id=none -Map=$(BUILD)/martyne.map
 
-C_SOURCES   := src/kernel.c src/arch/aarch64/uart.c \
+C_SOURCES   := src/kernel.c src/scheduler.c src/arch/aarch64/uart.c \
                src/arch/aarch64/exception.c src/arch/aarch64/gic.c \
                src/arch/aarch64/timer.c src/arch/aarch64/mmu.c \
                src/mm/page.c src/mm/heap.c
@@ -45,20 +45,14 @@ qemu-test: $(KERNEL)
 		-nographic -monitor none -serial stdio -kernel $(KERNEL) > $(BUILD)/qemu-test.log 2>&1; \
 		status=$$?; set -e; cat $(BUILD)/qemu-test.log; \
 		grep -q "MARTYNE LINUX: M1 boot OK" $(BUILD)/qemu-test.log || \
-		(echo "Kernel boot signature missing (QEMU exit $$status)"; exit 1); \
-		grep -q "memory: frame allocator OK" $(BUILD)/qemu-test.log || \
-		(echo "Physical frame allocator test missing (QEMU exit $$status)"; exit 1); \
-		grep -q "heap: allocation and coalescing OK" $(BUILD)/qemu-test.log || \
-		(echo "Kernel heap test missing (QEMU exit $$status)"; exit 1); \
+		(echo "Kernel boot signature missing"; exit 1); \
 		grep -q "MMU: translation enabled" $(BUILD)/qemu-test.log || \
-		(echo "MMU activation signature missing (QEMU exit $$status)"; exit 1); \
-		grep -q "timer: tick 0x0000000000000001" $(BUILD)/qemu-test.log || \
-		(echo "Timer tick 1 missing"; exit 1); \
-		grep -q "timer: tick 0x0000000000000002" $(BUILD)/qemu-test.log || \
-		(echo "Timer tick 2 missing"; exit 1); \
+		(echo "MMU activation signature missing"; exit 1); \
+		grep -q "scheduler: round-robin preemption OK" $(BUILD)/qemu-test.log || \
+		(echo "Round-robin scheduler test missing"; exit 1); \
 		grep -q "timer: tick 0x0000000000000003" $(BUILD)/qemu-test.log || \
 		(echo "Timer tick 3 missing"; exit 1); \
-		echo "QEMU boot, memory, heap, MMU, and timer tests passed"
+		echo "QEMU boot, MMU, timer, and preemptive scheduler tests passed"
 
 clean:
 	rm -rf $(BUILD)

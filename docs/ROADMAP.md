@@ -30,11 +30,13 @@ The kernel is developed in dependency order. Each milestone should build and boo
 - [ ] Runtime MMU, allocation, exhaustion, free, and reuse tests
 
 ## M4 — Processes and scheduling
-- [ ] CPU context structure and context save/restore
-- [ ] Kernel threads
-- [ ] Round-robin preemptive scheduler
-- [ ] Synchronization primitives
+- [x] AArch64 exception frame with GPR, ELR_EL1, and SPSR_EL1 save/restore
+- [x] Kernel-thread initial contexts and private stacks
+- [x] Single-core timer-driven round-robin preemption
+- [ ] Thread lifecycle, blocking, wakeup, and idle-task policy
+- [ ] Synchronization primitives (spinlocks, mutexes, wait queues)
 - [ ] User/kernel privilege boundary and syscall ABI
+- [ ] Per-process address spaces and scheduling isolation
 
 ## M5 — Storage and filesystem
 - [ ] VirtIO-MMIO block driver

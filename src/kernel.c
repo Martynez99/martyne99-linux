@@ -2,6 +2,7 @@
 #include "gic.h"
 #include "memory.h"
 #include "mmu.h"
+#include "scheduler.h"
 #include "timer.h"
 #include "uart.h"
 
@@ -102,13 +103,16 @@ void kernel_main(void)
     uart_puts("GICv2: Group 1 CPU/distributor enabled\n");
 
     timer_init();
+    scheduler_init();
     uart_puts("Generic Timer: 10 Hz configured\n");
-    uart_puts("Enabling IRQs; waiting for timer interrupts...\n");
+    uart_puts("Scheduler: idle + 2 kernel threads ready\n");
+    uart_puts("Enabling IRQs; round-robin preemption active\n");
 
     __asm__ volatile("dsb sy\n\tisb" ::: "memory");
     enable_irq();
 
     unsigned long reported = 0;
+    int scheduler_reported = 0;
     for (;;) {
         unsigned long now = timer_ticks();
         while (reported < now) {
@@ -117,6 +121,14 @@ void kernel_main(void)
             uart_hex(reported);
             uart_puts("\n");
         }
+
+        if (!scheduler_reported && scheduler_self_test_passed()) {
+            scheduler_reported = 1;
+            uart_puts("scheduler: round-robin preemption OK, switches=");
+            uart_hex(scheduler_switch_count());
+            uart_puts("\n");
+        }
+
         __asm__ volatile("wfe");
     }
 }

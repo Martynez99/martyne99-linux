@@ -22,6 +22,10 @@ _start:
     eret
 
 1:
+    // Force EL1h so exceptions and all kernel threads use SP_EL1.
+    msr     spsel, #1
+    isb
+
     // Mask IRQ/FIQ/SError during early single-core bring-up.
     msr     daifset, #0xf
 
