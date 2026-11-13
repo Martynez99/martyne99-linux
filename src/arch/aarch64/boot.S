@@ -1,4 +1,4 @@
-.section .text.boot, "ax"
+ .section .text.boot, "ax"
 .global _start
 .type _start, %function
 
@@ -11,10 +11,14 @@ _start:
 
     mov     x0, #(1 << 31)       // HCR_EL2.RW: EL1 is AArch64
     msr     hcr_el2, x0
+    mov     x0, #3               // Permit EL1 physical counter/timer access
+    msr     cnthctl_el2, x0
+    msr     cntvoff_el2, xzr
     mov     x0, #0x3c5           // DAIF masked, EL1h
     msr     spsr_el2, x0
     adr     x0, 1f
     msr     elr_el2, x0
+    isb
     eret
 
 1:
