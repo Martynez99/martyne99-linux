@@ -5,24 +5,32 @@ SECTIONS
     . = 0x40080000;
     __kernel_start = .;
 
-    .text : ALIGN(0x1000)
+    . = ALIGN(0x1000);
+    __text_start = .;
+    .text :
     {
         KEEP(*(.text.boot))
         KEEP(*(.text.vectors))
         *(.text .text.*)
     }
+    . = ALIGN(0x1000);
+    __text_end = .;
 
-    .rodata : ALIGN(0x1000)
+    __rodata_start = .;
+    .rodata :
     {
         *(.rodata .rodata.*)
     }
+    . = ALIGN(0x1000);
+    __rodata_end = .;
 
-    .data : ALIGN(0x1000)
+    .data :
     {
         *(.data .data.*)
     }
+    . = ALIGN(0x1000);
 
-    .bss (NOLOAD) : ALIGN(0x1000)
+    .bss (NOLOAD) :
     {
         __bss_start = .;
         *(COMMON)
