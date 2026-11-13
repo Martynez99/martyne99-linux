@@ -1,28 +1,25 @@
 #include "gic.h"
 #include "timer.h"
-#include "uart.h"
 
 #include <stdint.h>
 
-#define GICD_BASE 0x08000000UL
-#define GICC_BASE 0x08010000UL
-#define GICD_CTLR (*(volatile uint32_t *)(GICD_BASE + 0x000))
-#define GICD_IGROUPR0 (*(volatile uint32_t *)(GICD_BASE + 0x080))
+#define GICD_BASE       0x08000000UL
+#define GICC_BASE       0x08010000UL
+#define GICD_CTLR       (*(volatile uint32_t *)(GICD_BASE + 0x000))
+#define GICD_IGROUPR0   (*(volatile uint32_t *)(GICD_BASE + 0x080))
 #define GICD_ISENABLER0 (*(volatile uint32_t *)(GICD_BASE + 0x100))
-#define GICD_IPRIORITYR (*(volatile uint8_t *)(GICD_BASE + 0x400 + 30))
-#define GICC_CTLR (*(volatile uint32_t *)(GICC_BASE + 0x000))
-#define GICC_PMR (*(volatile uint32_t *)(GICC_BASE + 0x004))
-#define GICC_IAR (*(volatile uint32_t *)(GICC_BASE + 0x00c))
-#define GICC_EOIR (*(volatile uint32_t *)(GICC_BASE + 0x010))
+#define GICD_IPRIORITYR (*(volatile uint8_t  *)(GICD_BASE + 0x400 + 30))
+#define GICC_CTLR       (*(volatile uint32_t *)(GICC_BASE + 0x000))
+#define GICC_PMR        (*(volatile uint32_t *)(GICC_BASE + 0x004))
+#define GICC_IAR        (*(volatile uint32_t *)(GICC_BASE + 0x00c))
+#define GICC_EOIR       (*(volatile uint32_t *)(GICC_BASE + 0x010))
 
 #define ARM_GENERIC_TIMER_PPI 30U
-#define GIC_SPURIOUS_ID 1023U
-
-static unsigned int unexpected_irq_reports;
+#define GIC_SPURIOUS_ID        1023U
 
 void gic_init(void)
 {
-    /* QEMU virt GICv2: route the EL1 non-secure physical timer to Group 1. */
+    /* Configure the non-secure physical timer PPI as Group 1. */
     GICD_CTLR = 0;
     GICC_CTLR = 0;
 
@@ -32,7 +29,11 @@ void gic_init(void)
 
     GICC_PMR = 0xff;
     __asm__ volatile("dsb sy" ::: "memory");
-    /* Secure-view Group 1 acknowledgement requires AckCtl (bit 2). */
+
+    /*
+     * Enable Group 1 and AckCtl. QEMU virt runs without TrustZone by
+     * default, so secure-view acknowledgement of Group 1 requires AckCtl.
+     */
     GICC_CTLR = 0x6;
     GICD_CTLR = 0x2;
     __asm__ volatile("dsb sy\n\tisb" ::: "memory");
@@ -46,14 +47,8 @@ void gic_handle_irq(void)
     if (id == GIC_SPURIOUS_ID)
         return;
 
-    if (id == ARM_GENERIC_TIMER_PPI) {
+    if (id == ARM_GENERIC_TIMER_PPI)
         timer_irq_handler();
-    } else if (unexpected_irq_reports < 4U) {
-        ++unexpected_irq_reports;
-        uart_puts("GIC: unexpected IRQ INTID ");
-        uart_hex(id);
-        uart_puts("\n");
-    }
 
     GICC_EOIR = iar;
     __asm__ volatile("dsb sy" ::: "memory");
