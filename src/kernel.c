@@ -1,9 +1,13 @@
 #include "exception.h"
 #include "gic.h"
+#include "memory.h"
 #include "timer.h"
 #include "uart.h"
 
 #include <stdint.h>
+
+#define QEMU_RAM_BASE 0x40000000UL
+#define QEMU_RAM_SIZE (256UL * 1024UL * 1024UL)
 
 extern char __kernel_start[];
 extern char __kernel_end[];
@@ -18,6 +22,48 @@ static unsigned long read_current_el(void)
 static void enable_irq(void)
 {
     __asm__ volatile("msr daifclr, #2\n\tisb" ::: "memory");
+}
+
+static void memory_self_test(void)
+{
+    if (memory_init(QEMU_RAM_BASE, QEMU_RAM_BASE + QEMU_RAM_SIZE,
+                    (uintptr_t)__kernel_end) != 0) {
+        uart_puts("memory: initialization FAILED\n");
+        return;
+    }
+
+    void *frame = page_alloc();
+    if (!frame || ((uintptr_t)frame & (PAGE_SIZE - 1UL))) {
+        uart_puts("memory: frame allocation FAILED\n");
+        return;
+    }
+    if (page_free(frame) != 0 || page_free(frame) == 0) {
+        uart_puts("memory: frame free validation FAILED\n");
+        return;
+    }
+    uart_puts("memory: frame allocator OK, free pages=");
+    uart_hex((unsigned long)memory_free_pages());
+    uart_puts("\n");
+
+    if (heap_init() != 0) {
+        uart_puts("heap: initialization FAILED\n");
+        return;
+    }
+
+    uint8_t *a = (uint8_t *)kmalloc(64);
+    uint8_t *b = (uint8_t *)kmalloc(128);
+    if (!a || !b) {
+        uart_puts("heap: allocation FAILED\n");
+        return;
+    }
+    a[0] = 0xa5U;
+    b[127] = 0x5aU;
+    if (a[0] != 0xa5U || b[127] != 0x5aU ||
+        kfree(a) != 0 || kfree(b) != 0) {
+        uart_puts("heap: allocation/free FAILED\n");
+        return;
+    }
+    uart_puts("heap: allocation and coalescing OK\n");
 }
 
 void kernel_main(void)
@@ -40,6 +86,8 @@ void kernel_main(void)
 
     exception_vectors_install();
     uart_puts("Exception vectors: installed\n");
+
+    memory_self_test();
 
     gic_init();
     uart_puts("GICv2: Group 1 CPU/distributor enabled\n");
