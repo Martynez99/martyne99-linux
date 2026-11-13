@@ -16,14 +16,10 @@ void kernel_main(void)
 {
     uart_init();
 
-    uart_puts("\n\n");
-    uart_puts("  __  __          _____ _______   _   _ ______   _      _____ _   _ _   _ X\n");
-    uart_puts(" |  \/  |   /\   |  __ \__   __| | \ | |  ____| | |    |_   _| \ | | | | |\n");
-    uart_puts(" | \  / |  /  \  | |__) | | |    |  \| | |__    | |      | | |  \| | | | |\n");
-    uart_puts(" | |\/| | / /\ \ |  _  /  | |    | . ` |  __|   | |      | | | . ` | | | |\n");
-    uart_puts(" | |  | |/ ____ \| | \ \  | |    | |\  | |____  | |____ _| |_| |\  | |_| |\n");
-    uart_puts(" |_|  |_/_/    \_\_|  \_\ |_|    |_| \_|______| |______|_____|_| \_|\___/\n\n");
-
+    uart_puts("\n");
+    uart_puts("========================================\n");
+    uart_puts("           MARTYNE LINUX                \n");
+    uart_puts("========================================\n");
     uart_puts("MARTYNE LINUX: M1 boot OK\n");
     uart_puts("Architecture : AArch64\n");
     uart_puts("Exception EL : EL");
