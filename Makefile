@@ -45,9 +45,8 @@ qemu-test: $(KERNEL)
 		status=$$?; set -e; cat $(BUILD)/qemu-test.log; \
 		grep -q "MARTYNE LINUX: M1 boot OK" $(BUILD)/qemu-test.log || \
 		(echo "Kernel boot signature missing (QEMU exit $$status)"; exit 1); \
-		ticks=$(grep -c "timer: tick" $(BUILD)/qemu-test.log || true); \
-		test "$ticks" -ge 3 || \
-		(echo "Expected at least 3 timer ticks, observed $ticks (QEMU exit $status)"; exit 1); \
+		test $(grep -c "timer: tick" $(BUILD)/qemu-test.log) -ge 3 || \
+		(echo "Fewer than 3 timer ticks (QEMU exit $status)"; exit 1); \
 		echo "QEMU boot and repeated timer IRQ test passed"
 
 clean:
