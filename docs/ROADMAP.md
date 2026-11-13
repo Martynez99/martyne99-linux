@@ -19,11 +19,12 @@ The kernel is developed in dependency order. Each milestone should build and boo
 - [ ] Runtime validation on the developer's QEMU installation
 
 ## M3 — Memory manager
-- [ ] Parse usable RAM from the device tree
-- [ ] Physical page/frame allocator
+- [x] Bounded 4 KiB physical frame allocator for the initial QEMU RAM window
+- [x] Kernel heap with splitting and coalescing
+- [ ] Parse usable RAM and reserved regions from the device tree
 - [ ] AArch64 page tables and virtual-memory map
-- [ ] Kernel heap allocator
 - [ ] Memory-region permissions and guard pages
+- [ ] QEMU allocation, exhaustion, free, and reuse tests
 
 ## M4 — Processes and scheduling
 - [ ] CPU context structure and context save/restore
