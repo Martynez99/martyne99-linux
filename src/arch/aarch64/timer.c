@@ -13,14 +13,14 @@ static inline unsigned long read_counter_frequency(void)
 static inline void arm_timer(void)
 {
     /*
-     * Use the EL1 physical timer. boot.S sets CNTHCTL_EL2 bits 0 and 1,
-     * granting EL1 access to the physical counter and timer.
-     * The non-secure physical timer is GIC PPI 30.
+     * EL1 physical timer. boot.S grants EL1 physical counter/timer access
+     * through CNTHCTL_EL2. Its non-secure PPI is GIC INTID 30.
      */
+    unsigned long control = 1;
     __asm__ volatile("msr cntp_ctl_el0, xzr" ::: "memory");
     __asm__ volatile("msr cntp_tval_el0, %0" :: "r"(interval) : "memory");
     __asm__ volatile("isb" ::: "memory");
-    __asm__ volatile("mov x0, #1\n\tmsr cntp_ctl_el0, x0" ::: "x0", "memory");
+    __asm__ volatile("msr cntp_ctl_el0, %0" :: "r"(control) : "memory");
     __asm__ volatile("isb" ::: "memory");
 }
 
