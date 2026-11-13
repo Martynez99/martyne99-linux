@@ -21,10 +21,13 @@ The kernel is developed in dependency order. Each milestone should build and boo
 ## M3 — Memory manager
 - [x] Bounded 4 KiB physical frame allocator for the initial QEMU RAM window
 - [x] Kernel heap with splitting and coalescing
+- [x] AArch64 4 KiB translation tables and identity map
+- [x] Device-nGnRnE mappings for QEMU virt GIC and PL011
+- [x] Kernel text read-only/executable and rodata read-only/execute-never mappings
+- [x] Data/BSS and remaining RAM privileged RW/execute-never mappings
 - [ ] Parse usable RAM and reserved regions from the device tree
-- [ ] AArch64 page tables and virtual-memory map
-- [ ] Memory-region permissions and guard pages
-- [ ] QEMU allocation, exhaustion, free, and reuse tests
+- [ ] Per-section permissions across all RAM and guard pages
+- [ ] Runtime MMU, allocation, exhaustion, free, and reuse tests
 
 ## M4 — Processes and scheduling
 - [ ] CPU context structure and context save/restore

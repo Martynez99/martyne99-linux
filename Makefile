@@ -13,7 +13,8 @@ LDFLAGS     := -T linker.ld -nostdlib --build-id=none -Map=$(BUILD)/martyne.map
 
 C_SOURCES   := src/kernel.c src/arch/aarch64/uart.c \
                src/arch/aarch64/exception.c src/arch/aarch64/gic.c \
-               src/arch/aarch64/timer.c src/mm/page.c src/mm/heap.c
+               src/arch/aarch64/timer.c src/arch/aarch64/mmu.c \
+               src/mm/page.c src/mm/heap.c
 ASM_SOURCES := src/arch/aarch64/boot.S src/arch/aarch64/vectors.S
 OBJECTS     := $(patsubst %.c,$(BUILD)/%.o,$(C_SOURCES)) \
                $(patsubst %.S,$(BUILD)/%.o,$(ASM_SOURCES))
@@ -49,13 +50,15 @@ qemu-test: $(KERNEL)
 		(echo "Physical frame allocator test missing (QEMU exit $$status)"; exit 1); \
 		grep -q "heap: allocation and coalescing OK" $(BUILD)/qemu-test.log || \
 		(echo "Kernel heap test missing (QEMU exit $$status)"; exit 1); \
+		grep -q "MMU: translation enabled" $(BUILD)/qemu-test.log || \
+		(echo "MMU activation signature missing (QEMU exit $$status)"; exit 1); \
 		grep -q "timer: tick 0x0000000000000001" $(BUILD)/qemu-test.log || \
 		(echo "Timer tick 1 missing"; exit 1); \
 		grep -q "timer: tick 0x0000000000000002" $(BUILD)/qemu-test.log || \
 		(echo "Timer tick 2 missing"; exit 1); \
 		grep -q "timer: tick 0x0000000000000003" $(BUILD)/qemu-test.log || \
 		(echo "Timer tick 3 missing"; exit 1); \
-		echo "QEMU boot, memory, heap, and timer tests passed"
+		echo "QEMU boot, memory, heap, MMU, and timer tests passed"
 
 clean:
 	rm -rf $(BUILD)

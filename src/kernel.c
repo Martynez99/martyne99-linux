@@ -1,6 +1,7 @@
 #include "exception.h"
 #include "gic.h"
 #include "memory.h"
+#include "mmu.h"
 #include "timer.h"
 #include "uart.h"
 
@@ -88,6 +89,14 @@ void kernel_main(void)
     uart_puts("Exception vectors: installed\n");
 
     memory_self_test();
+
+    uart_puts("MMU: building identity map and enabling translation...\n");
+    if (mmu_init() != 0 || !mmu_is_enabled()) {
+        uart_puts("MMU: activation FAILED\n");
+        for (;;)
+            __asm__ volatile("wfe");
+    }
+    uart_puts("MMU: translation enabled\n");
 
     gic_init();
     uart_puts("GICv2: Group 1 CPU/distributor enabled\n");
