@@ -1,3 +1,6 @@
+#include "exception.h"
+#include "gic.h"
+#include "timer.h"
 #include "uart.h"
 
 #include <stdint.h>
@@ -10,6 +13,12 @@ static unsigned long read_current_el(void)
     unsigned long value;
     __asm__ volatile("mrs %0, CurrentEL" : "=r"(value));
     return (value >> 2) & 3UL;
+}
+
+static void enable_irq(void)
+{
+    __asm__ volatile("msr daifclr, #2
+isb" ::: "memory");
 }
 
 void kernel_main(void)
@@ -28,9 +37,29 @@ void kernel_main(void)
     uart_hex((unsigned long)(uintptr_t)__kernel_start);
     uart_puts("\nKernel end  : ");
     uart_hex((unsigned long)(uintptr_t)__kernel_end);
-    uart_puts("\nStatus       : MMU off, interrupts masked\n");
-    uart_puts("\nM1 foundation is alive. Next: exception vectors, GIC, and timer.\n");
 
-    for (;;)
+    exception_vectors_install();
+    uart_puts("\nException vectors: installed\n");
+
+    gic_init();
+    uart_puts("GICv2: Group 1 CPU/distributor enabled\n");
+
+    timer_init();
+    uart_puts("Generic Timer: 10 Hz configured\n");
+    uart_puts("Enabling IRQs; waiting for timer interrupts...\n");
+
+    __asm__ volatile("dsb sy\nisb" ::: "memory");
+    enable_irq();
+
+    unsigned long reported = 0;
+    for (;;) {
+        unsigned long now = timer_ticks();
+        while (reported < now) {
+            ++reported;
+            uart_puts("timer: tick ");
+            uart_hex(reported);
+            uart_puts("\n");
+        }
         __asm__ volatile("wfe");
+    }
 }
