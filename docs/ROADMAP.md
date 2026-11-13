@@ -10,12 +10,13 @@ The kernel is developed in dependency order. Each milestone should build and boo
 - [ ] Validate boot on the developer's QEMU installation
 
 ## M2 — CPU, exceptions, and interrupt controller
-- [ ] Exception-level and CPU feature reporting
-- [ ] AArch64 exception vectors and fault diagnostics
-- [ ] Generic Timer driver
-- [ ] Flattened Device Tree (FDT) discovery
-- [ ] GICv2 interrupt-controller driver for QEMU virt
-- [ ] Interrupt-safe logging and IRQ enable/disable primitives
+- [x] AArch64 exception vector table and VBAR_EL1 installation
+- [x] Synchronous exception diagnostics (ESR, FAR, ELR)
+- [x] EL1 physical Generic Timer driver (10 Hz)
+- [x] GICv2 Group 1 setup for QEMU virt
+- [x] IRQ dispatch and timer interrupt acknowledgement
+- [ ] Flattened Device Tree (FDT) discovery; current addresses are QEMU virt constants
+- [ ] Runtime validation on the developer's QEMU installation
 
 ## M3 — Memory manager
 - [ ] Parse usable RAM from the device tree
